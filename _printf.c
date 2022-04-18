@@ -16,6 +16,7 @@ int _printf(const char *format, ...)
 	int count = 0;
 	char c;
 	char *string;
+	va_list ap;
 
 	va_start(ap, format);
 	for (i = 0; i < length; i++)
