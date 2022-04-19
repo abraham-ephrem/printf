@@ -1,54 +1,72 @@
-#include "main.h"
-#include <stdarg.h>
-#include <string.h>
-#include <unistd.h>
+#include "holberton.h"
+#include "funcs_array.h"
+
 /**
- * _printf - a printf function
- * @format: the format of the content to be printed
- * Return: the number of characters printed
+ * _printf - prints to stdout according to a format string
+ * @format: constant string containing zero or more directives
+ * Return: int number of characters printed (excluding terminating null-byte)
  */
 int _printf(const char *format, ...)
 {
-  int i,count=0,j,length=strlen(format),str_lenght;
-  char c,*string;
-  va_list ap;
+	int i, count = 0;
+	va_list ap;
 
-  va_start(ap, format);
-  for (i = 0; i < length; i++)
-  {
-    if (format[i] != '%')
-    {
-      write(1, &format[i], 1);
-      count++;
-    }
-    if (format[i] == '%')
-    {
-      if (format[i + 1] == '%')
-      {
-        write(1, &format[i + 1], 1);
-        count++;
-        i++;
-      }
-      if (format[i + 1] == 'c')
-      {
-        c = va_arg(ap, int);
-        write(1, &c, 1);
-        i++;
-        count++;
-      }
-      if (format[i + 1] == 's')
-      {
-        string = va_arg(ap, char *);
-        str_length = strlen(string);
-        for (j = 0; j < str_length; j++)
-        {
-          write(1, &string[j], 1);
-          count++;
-        }
-        i++;
-      }
-    }
-    va_end(ap);
-  }
-  return (count);
+	va_start(ap, format);
+
+	if (format == NULL)
+		return (-1);
+
+	for (i = 0; format[i] != '\0'; i++)
+	{
+		if (format[i] != '%')
+		{
+			count += _putchar(format[i]);
+			continue;
+		}
+		switch (format[++i])
+		{
+		case '%':
+			count += _putchar('%');
+			break;
+		case 'c':
+		case 's':
+		case 'd':
+		case 'i':
+		case 'u':
+		case 'o':
+			count += call_print_fn(format[i], ap);
+			break;
+		default:
+			if (!format[i])
+				return (-1);
+			count += _putchar('%');
+			count += _putchar(format[i]);
+			break;
+		}
+	}
+	va_end(ap);
+	return (count);
+}
+
+
+/**
+ * call_print_fn - call appropriate print fn
+ * @ch: format string character
+ * @ap: object to be printed
+ * Return: number of characters printed
+ */
+int call_print_fn(char ch, va_list ap)
+{
+	int j;
+	int count = 0;
+
+	for (j = 0; funcs[j].spec != NULL; j++)
+	{
+		if (ch == funcs[j].spec[0])
+		{
+			count += funcs[j].fn(ap);
+			break;
+		}
+	}
+	return (count);
 }
