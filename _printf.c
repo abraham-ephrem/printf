@@ -1,45 +1,54 @@
 #include "main.h"
-#include <stdlib.h>
-
+#include <stdarg.h>
+#include <string.h>
+#include <unistd.h>
 /**
- * _printf - prints any string with certain flags for modification
- * @format: the string of characters to write to buffer
- * Return: an integer that counts how many writes to the buffer were made
+ * _printf - a printf function
+ * @format: the format of the content to be printed
+ * Return: the number of characters printed
  */
 int _printf(const char *format, ...)
 {
-	int i = 0, var = 0;
-	va_list v_ls;
-	buffer *buf;
+  int i,count=0,j,length=strlen(format),str_lenght;
+  char c,*string;
+  va_list ap;
 
-	buf = buf_new();
-	if (buf == NULL)
-		return (-1);
-	if (format == NULL)
-		return (-1);
-	va_start(v_ls, format);
-	while (format[i])
-	{
-		buf_wr(buf);
-		if (format[i] == '%')
-		{
-			var = opid(buf, v_ls, format, i);
-			if (var < 0)
-			{
-				i = var;
-				break;
-			}
-			i += var;
-			continue;
-		}
-		buf->str[buf->index] = format[i];
-		buf_inc(buf);
-		i++;
-	}
-	buf_write(buf);
-	if (var >= 0)
-		i = buf->overflow;
-	buf_end(buf);
-	va_end(v_ls);
-	return (i);
+  va_start(ap, format);
+  for (i = 0; i < length; i++)
+  {
+    if (format[i] != '%')
+    {
+      write(1, &format[i], 1);
+      count++;
+    }
+    if (format[i] == '%')
+    {
+      if (format[i + 1] == '%')
+      {
+        write(1, &format[i + 1], 1);
+        count++;
+        i++;
+      }
+      if (format[i + 1] == 'c')
+      {
+        c = va_arg(ap, int);
+        write(1, &c, 1);
+        i++;
+        count++;
+      }
+      if (format[i + 1] == 's')
+      {
+        string = va_arg(ap, char *);
+        str_length = strlen(string);
+        for (j = 0; j < str_length; j++)
+        {
+          write(1, &string[j], 1);
+          count++;
+        }
+        i++;
+      }
+    }
+    va_end(ap);
+  }
+  return (count);
 }
