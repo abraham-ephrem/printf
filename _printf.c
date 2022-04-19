@@ -1,59 +1,45 @@
 #include "main.h"
-#include <stdarg.h>
-#include <string.h>
-#include <unistd.h>
+#include <stdlib.h>
+
 /**
- * _printf - a printf function
- * @format: the format of the content to be printed
- * Return: the number of characters printed
+ * _printf - prints any string with certain flags for modification
+ * @format: the string of characters to write to buffer
+ * Return: an integer that counts how many writes to the buffer were made
  */
 int _printf(const char *format, ...)
 {
-	int i;
-	int j;
-	int length = strlen(format);
-	int str_length;
-	int count = 0;
-	char c;
-	char *string;
-	va_list ap;
+	int i = 0, var = 0;
+	va_list v_ls;
+	buffer *buf;
 
-	va_start(ap, format);
-	for (i = 0; i < length; i++)
+	buf = buf_new();
+	if (buf == NULL)
+		return (-1);
+	if (format == NULL)
+		return (-1);
+	va_start(v_ls, format);
+	while (format[i])
 	{
-		if (format[i] != '%')
-		{
-			write(1, &format[i], 1);
-			count++;
-		}
+		buf_wr(buf);
 		if (format[i] == '%')
 		{
-			if (format[i + 1] == '%')
+			var = opid(buf, v_ls, format, i);
+			if (var < 0)
 			{
-				write(1, &format[i + 1], 1);
-				count++;
-				i++;
+				i = var;
+				break;
 			}
-			if (format[i + 1] == 'c')
-			{
-				c = va_arg(ap, int);
-				write(1, &c, 1);
-				i++;
-				count++;
-			}
-			if (format[i + 1] == 's')
-			{
-				string = va_arg(ap, char *);
-				str_length = strlen(string);
-				for (j = 0; j < str_length; j++)
-				{
-					write(1, &string[j], 1);
-					count++;
-				}
-				i++;
-			}
+			i += var;
+			continue;
 		}
-		va_end(ap);
+		buf->str[buf->index] = format[i];
+		buf_inc(buf);
+		i++;
 	}
-	return (count);
+	buf_write(buf);
+	if (var >= 0)
+		i = buf->overflow;
+	buf_end(buf);
+	va_end(v_ls);
+	return (i);
 }
