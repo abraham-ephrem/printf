@@ -1,72 +1,43 @@
-#include "holberton.h"
-#include "funcs_array.h"
-
+#include "main.h"
 /**
- * _printf - prints to stdout according to a format string
- * @format: constant string containing zero or more directives
- * Return: int number of characters printed (excluding terminating null-byte)
+ * _printf - printf function
+ * @format: const char pointer
+ * Return: b_len
  */
 int _printf(const char *format, ...)
 {
-	int i, count = 0;
-	va_list ap;
+	int (*pfunc)(va_list, flags_t *);
+	const char *p;
+	va_list arguments;
+	flags_t flags = {0, 0, 0};
 
-	va_start(ap, format);
+	register int count = 0;
 
-	if (format == NULL)
+	va_start(arguments, format);
+	if (!format || (format[0] == '%' && !format[1]))
 		return (-1);
-
-	for (i = 0; format[i] != '\0'; i++)
+	if (format[0] == '%' && format[1] == ' ' && !format[2])
+		return (-1);
+	for (p = format; *p; p++)
 	{
-		if (format[i] != '%')
+		if (*p == '%')
 		{
-			count += _putchar(format[i]);
-			continue;
-		}
-		switch (format[++i])
-		{
-		case '%':
-			count += _putchar('%');
-			break;
-		case 'c':
-		case 's':
-		case 'd':
-		case 'i':
-		case 'u':
-		case 'o':
-			count += call_print_fn(format[i], ap);
-			break;
-		default:
-			if (!format[i])
-				return (-1);
-			count += _putchar('%');
-			count += _putchar(format[i]);
-			break;
-		}
+			p++;
+			if (*p == '%')
+			{
+				count += _putchar('%');
+				continue;
+			}
+			while (get_flag(*p, &flags))
+				p++;
+			pfunc = get_print(*p);
+			count += (pfunc)
+				? pfunc(arguments, &flags)
+				: _printf("%%%c", *p);
+		} else
+			count += _putchar(*p);
 	}
-	va_end(ap);
-	return (count);
-}
-
-
-/**
- * call_print_fn - call appropriate print fn
- * @ch: format string character
- * @ap: object to be printed
- * Return: number of characters printed
- */
-int call_print_fn(char ch, va_list ap)
-{
-	int j;
-	int count = 0;
-
-	for (j = 0; funcs[j].spec != NULL; j++)
-	{
-		if (ch == funcs[j].spec[0])
-		{
-			count += funcs[j].fn(ap);
-			break;
-		}
-	}
+	_putchar(-1);
+	va_end(arguments);
 	return (count);
 }
